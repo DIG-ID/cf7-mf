@@ -1,0 +1,113 @@
+/**
+ * All of the CSS for your public-facing functionality should be
+ * included in this file.
+ */
+
+
+#cf7-mf-container {
+  display: flex;
+  flex-direction: column;
+}
+
+#cf7-mf-container .cf7-mf-content-wrapper {
+  display: flex;
+}
+
+#cf7-mf-container .cf7-mf-drag-drop-zone {
+  background-color: #E9F2FF;
+  width: 190px;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: dashed 1px #405FF2;
+  border-radius: 8px;
+  padding: 20px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: #050B20;
+  position: relative;
+  cursor: pointer;
+}
+
+#cf7-mf-container .wpcf7-multifile {
+  display: none;
+}
+
+
+#cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-text {
+  margin-top: 8px;
+}
+
+#cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-icon {
+  width: 34px;
+  height: 34px;
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 34 34'%3E%3Cpath fill='%23050B20' fill-rule='evenodd' d='M17.1709 21.2502c-.5868 0-1.0625-.4757-1.0625-1.0625V3.12964c0-.5868.4757-1.0625 1.0625-1.0625s1.0625.4757 1.0625 1.0625V20.1877c0 .5868-.4757 1.0625-1.0625 1.0625Z' clip-rule='evenodd'/%3E%3Cpath fill='%23050B20' fill-rule='evenodd' d='M12.2903 8.02853c-.4158-.41408-.4172-1.08681-.0031-1.5026l4.131-4.148c.1994-.2002.4702-.31274.7529-.31274.2824 0 .5534.11254.7528.31274l4.131 4.148c.4141.41579.4126 1.08852-.0031 1.5026-.4158.41408-1.0885.4127-1.5026-.00309l-3.3781-3.39205-3.3782 3.39205c-.4141.41579-1.0868.41717-1.5026.00309ZM6.30446 13.7585c.81536-1.1004 2.14832-1.6505 4.60244-1.8767.5843-.0538 1.0143-.5712.9604-1.1555-.0538-.5843-.5712-1.01438-1.1555-.96051-2.61758.24131-4.74129.87411-6.11468 2.72751-1.31672 1.777-1.76362 4.4542-1.76362 8.2472 0 5.0289.78843 8.1209 3.37158 9.7076 1.23117.7563 2.75593 1.0905 4.50142 1.2529 1.7386.1617 3.8272.1617 6.2489.1617h.0895c2.4217 0 4.5104 0 6.2489-.1617 1.7455-.1624 3.2703-.4966 4.5015-1.2529 2.5832-1.5867 3.3715-4.6787 3.3715-9.7076 0-3.793-.4469-6.4702-1.7636-8.2472-1.3734-1.8534-3.497-2.4862-6.1147-2.72751-.5843-.05387-1.1016.37621-1.1555.96051-.0539.5843.3762 1.1017.9605 1.1555 2.454.2262 3.7871.7763 4.6024 1.8767.8721 1.1768 1.3459 3.2241 1.3459 6.982 0 5.0309-.8478 6.9687-2.3589 7.8969-.8158.5012-1.9527.7958-3.586.9478-1.6293.1515-3.6215.1525-6.0967.1525s-4.4674-.001-6.0969-.1525c-1.63325-.152-2.77005-.4466-3.58597-.9478-1.51102-.9282-2.35883-2.866-2.35883-7.8969 0-3.7579.47393-5.8052 1.34596-6.982Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#cf7-mf-container .cf7-mf-drag-drop-zone.drag-over {
+  border-color: #2b7bff;
+  background-color: #e8f2ff;
+}
+
+#cf7-mf-container .cf7-mf-preview {
+  display: flex;
+  justify-content: center;
+
+}
+
+#cf7-mf-container .cf7-mf-preview figure {
+  background-color: #dfdfdf;
+  width: 190px;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  color: #050B20;
+  overflow: hidden;
+  margin-right: 32px;
+  position: relative;
+}
+
+#cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  width: 40px;
+  height: 40px;
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 40 40'%3E%3Crect width='39' height='39' x='.5' y='.5' fill='%23fff' stroke='%23fff' rx='15.5'/%3E%3Cpath fill='%23050B20' fill-rule='evenodd' d='M18.0691 18.6903c.3091-.0309.5847.1947.6156.5038l.375 3.75c.031.3091-.1946.5848-.5037.6157-.3091.0309-.5848-.1946-.6157-.5038l-.375-3.75c-.0309-.3091.1947-.5848.5038-.6157ZM21.931 18.6903c.3091.0309.5346.3066.5037.6157l-.375 3.75c-.0309.3092-.3065.5347-.6157.5038-.309-.0309-.5346-.3066-.5037-.6157l.375-3.75c.0309-.3091.3066-.5347.6157-.5038ZM18.5929 11.9375h2.5361c.1623-.0001.3037-.0002.4372.0211.5274.0843.9839.4133 1.2306.887.0624.1199.1071.2541.1583.4081l.0837.2512c.0142.0425.0182.0545.0217.064.1313.3631.4718.6085.8578.6183.0101.0003.0226.0003.0676.0003h2.25c.3107 0 .5625.2519.5625.5625 0 .3107-.2518.5625-.5625.5625H13.4858c-.3106 0-.5625-.2518-.5625-.5625 0-.3106.2519-.5625.5625-.5625h2.2501c.045 0 .0575 0 .0676-.0003.386-.0098.7265-.2552.8579-.6183.0034-.0095.0074-.0213.0216-.064l.0837-.2512c.0513-.154.0959-.2882.1583-.4081.2467-.4737.7032-.8027 1.2307-.887.1335-.0213.2749-.0212.4372-.0211Zm-.9759 2.25c.0386-.0757.0728-.1545.1023-.2359.0089-.0247.0177-.051.029-.0848l.0748-.2246c.0684-.2051.0841-.247.0997-.277.0823-.1579.2344-.2676.4103-.2956.0334-.0054.078-.0071.2943-.0071h2.4671c.2162 0 .2608.0017.2943.0071.1758.028.328.1377.4102.2956.0156.03.0313.0718.0997.277l.0748.2244.0291.085c.0294.0814.0637.1602.1023.2359H17.617Z' clip-rule='evenodd'/%3E%3Cpath fill='%23050B20' fill-rule='evenodd' d='M14.8376 16.8138c.31-.0207.578.2138.5987.5238l.3449 5.1743c.0674 1.0109.1154 1.7143.2209 2.2435.1022.5134.245.7851.45.9769.2051.1918.4857.3162 1.0047.3841.5351.07 1.2401.0711 2.2532.0711h.58c1.0131 0 1.7181-.0011 2.2532-.0711.519-.0679.7996-.1923 1.0047-.3841.205-.1918.3478-.4635.4501-.9769.1054-.5292.1534-1.2326.2208-2.2435l.345-5.1743c.0206-.31.2886-.5445.5986-.5238.31.0206.5445.2887.5239.5986l-.3476 5.2138c-.0642.9621-.1159 1.7392-.2374 2.349-.1263.634-.3411 1.1636-.7848 1.5786-.4437.4151-.9864.5942-1.6274.6781-.6165.0806-1.3953.0806-2.3595.0806h-.6591c-.9642 0-1.7431 0-2.3596-.0806-.641-.0839-1.1836-.263-1.6273-.6781-.4437-.415-.6586-.9446-.7848-1.5786-.1215-.6098-.1733-1.3869-.2374-2.349l-.3476-5.2138c-.0207-.3099.2138-.578.5238-.5986Z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 990;
+}
+
+#cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon:hover {
+  cursor: pointer;
+}
+
+#cf7-mf-container .cf7-mf-preview figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-width: 100%;
+  margin-bottom: 0px;
+}
+
+
+.cf7-mf-feedback-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+  display: none;
+}
