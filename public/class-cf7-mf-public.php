@@ -65,8 +65,14 @@ class Cf7_Mf_Public {
 		add_action( 'wpcf7_init', array( $this, 'cf7_mf_add_form_tag_file' ) );
 		add_filter( 'wpcf7_form_enctype', array( $this, 'cf7_mf_form_enctype_filter' ) );
 
-		add_filter( 'wpcf7_validate_multifile', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
-		add_filter( 'wpcf7_validate_multifile*', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
+		//add_filter( 'wpcf7_validate_multifile', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
+		//add_filter( 'wpcf7_validate_multifile*', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
+
+		add_action( 'wpcf7_swv_create_schema', array( $this, 'cf7_mf_swv_add_file_rules' ), 10, 2 );
+
+		add_filter( 'wpcf7_mail_tag_replaced_file', array( $this, 'cf7_mf_file_mail_tag' ), 10, 4 );
+		add_filter( 'wpcf7_mail_tag_replaced_file*', array( $this, 'cf7_mf_file_mail_tag' ), 10, 4 );
+
 		add_filter( 'wpcf7_messages', array( $this, 'cf7_mf_messages' ), 10, 1 );
 
 	}
@@ -115,16 +121,6 @@ class Cf7_Mf_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cf7-mf-public.js', array( 'jquery' ), $this->version, false );
-
-		// Pass variables to JS.
-		wp_localize_script(
-			$this->plugin_name,
-			'cf7MfVars',
-			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'cf7-mf-upload' ),
-			)
-		);
 
 	}
 
@@ -301,6 +297,106 @@ class Cf7_Mf_Public {
 	/**
 	 * Undocumented function
 	 *
+	 * @param [type] $schema
+	 * @param [type] $contact_form
+	 * @return void
+	 */
+	public function cf7_mf_swv_add_file_rules( $schema, $contact_form ) {
+
+		$tags = $contact_form->scan_form_tags(
+			array(
+				'basetype' => array( 'file' ),
+			)
+		);
+
+		foreach ( $tags as $tag ) :
+			// Check if the file field is required
+			if ( $tag->is_required() ) {
+				$schema->add_rule(
+					wpcf7_swv_create_rule( 'requiredfile', array(
+						'field' => $tag->name,
+						'error' => wpcf7_get_message( 'invalid_required' ),
+					) )
+				);
+			}
+
+			// File type validation (file extensions)
+			$schema->add_rule(
+				wpcf7_swv_create_rule( 'file', array(
+					'field' => $tag->name,
+					'accept' => explode( ',', wpcf7_acceptable_filetypes(
+						$tag->get_option( 'filetypes' ), 'attr'
+					) ),
+					'error' => wpcf7_get_message( 'upload_file_type_invalid' ),
+				) )
+			);
+
+			// File size validation
+			$schema->add_rule(
+				wpcf7_swv_create_rule( 'maxfilesize', array(
+					'field' => $tag->name,
+					'threshold' => $tag->get_limit_option(),
+					'error' => wpcf7_get_message( 'upload_file_too_large' ),
+				) )
+			);
+
+			// Min and Max file count validation
+			$min_files = $tag->get_option( 'min' );
+			$max_files = $tag->get_option( 'max' );
+
+			if ( ! empty( $min_files ) ) {
+				$schema->add_rule(
+					wpcf7_swv_create_rule( 'minfilecount', array(
+						'field' => $tag->name,
+						'min'    => $min_files[0],
+						'error'  => wpcf7_get_message( 'min_file_count_validation_msg' ),
+					) )
+				);
+			}
+
+			if ( ! empty( $max_files ) ) {
+				$schema->add_rule(
+					wpcf7_swv_create_rule( 'maxfilecount', array(
+						'field' => $tag->name,
+						'max'    => $max_files[0],
+						'error'  => wpcf7_get_message( 'max_file_count_validation_msg' ),
+					) )
+				);
+			}
+		endforeach;
+
+	}
+
+	/**
+	 * Undocumented function
+	 *
+	 * @return void
+	 */
+	public function cf7_mf_file_mail_tag( $replaced, $submitted, $html, $mail_tag ) {
+
+		$submission = WPCF7_Submission::get_instance();
+		$uploaded_files = $submission->uploaded_files();
+		$name = $mail_tag->field_name();
+
+		if ( ! empty( $uploaded_files[$name] ) ) {
+			$paths = (array) $uploaded_files[$name];
+			$paths = array_map( 'wp_basename', $paths );
+
+			$replaced = wpcf7_flat_join( $paths, array(
+				'separator' => wp_get_list_item_separator(),
+			) );
+		}
+
+		return $replaced;
+
+	}
+
+
+
+
+	/**
+	 * Undocumented function
+	 *
 	 * @param [type] $result
 	 * @param [type] $tag
 	 * @param [type] $args
@@ -311,9 +407,9 @@ class Cf7_Mf_Public {
 		global $latest_contact_form_7;
 
 		if ($latest_contact_form_7) {
-				$tag = new WPCF7_FormTag($tag);
+			$tag = new WPCF7_FormTag($tag);
 		} else {
-				$tag = new WPCF7_Shortcode($tag);
+			$tag = new WPCF7_Shortcode($tag);
 		}
 
 		$name = $tag->name;
@@ -323,7 +419,7 @@ class Cf7_Mf_Public {
 		
 		// If no files were uploaded, return an empty array for validation
 		if ($original_files_array === null) {
-				$original_files_array['tmp_name'] = array();
+			$original_files_array['tmp_name'] = array();
 		}
 
 		if (isset($_FILES[$name]) && isset($_FILES[$name]['name'])) {
@@ -351,7 +447,7 @@ class Cf7_Mf_Public {
 
 		// Validate minimum and maximum file counts
 		$file_count = count($files);
-		$min_file_allow = $tag->get_option('minfile');
+		$min_file_allow = $tag->get_option('min');
 		if (!empty($min_file_allow) && $file_count < $min_file_allow[0]) {
 			$message = wpcf7_get_message('min_file_count_validation_msg');
 			$message = str_replace('__min_file_limit__', $min_file_allow[0], $message);
@@ -359,7 +455,7 @@ class Cf7_Mf_Public {
 			return $result;
 		}
 
-		$max_file_allow = $tag->get_option('maxfile');
+		$max_file_allow = $tag->get_option('max');
 		if (!empty($max_file_allow) && $file_count > $max_file_allow[0]) {
 			$message = wpcf7_get_message('max_file_count_validation_msg');
 			$message = str_replace('__max_file_limit__', $max_file_allow[0], $message);

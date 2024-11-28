@@ -29,14 +29,5 @@
 	 * practising this, we should strive to set a better example in our own work.
 	 */
 
-	$(document).ready(function () {
-	    // on click close and side screen close popup
-			$('.button-close').on('click', function (e) {
-        e.preventDefault();
-        // Hide popup if close button is clicked
-        $('.admin-popup-container').hide();
-        $('#custom-plugin-modal-overlay').hide();
-        $('#custom-plugin-modal').hide();
-    });
-	});
+
 })( jQuery );
