@@ -41,13 +41,6 @@ class Cf7_Mf_Admin {
 	private $version;
 
 	/**
-	 * Undocumented variable
-	 *
-	 * @var [type]
-	 */
-	private $plugin_dir;
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -58,8 +51,7 @@ class Cf7_Mf_Admin {
 
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
-		$this->plugin_dir  = plugin_dir_path( __FILE__ );
-		add_action( 'wpcf7_admin_init', array( $this, 'cf7_mf_add_tag_generator_multifile' ), 60, 0 );
+		add_action( 'wpcf7_admin_init', array( $this, 'cf7_mf_add_tag_generator_multifile' ), 50, 0 );
 	}
 
 	/**
@@ -143,7 +135,6 @@ class Cf7_Mf_Admin {
 	 */
 	public function cf7_tag_generator_file( $contact_form, $options ) {
 
-
 		$field_types = array(
 			'file' => array(
 				'display_name' => __( 'MultiFile uploading field', 'cf7-mf' ),
@@ -156,9 +147,7 @@ class Cf7_Mf_Admin {
 
 		?>
 		<header class="description-box">
-			<h3><?php
-				echo esc_html( $field_types['file']['heading'] );
-			?></h3>
+			<h3><?php echo esc_html( $field_types['file']['heading'] ); ?></h3>
 
 			<p><?php
 				$description = wp_kses(
@@ -189,7 +178,7 @@ class Cf7_Mf_Admin {
 
 			<fieldset>
 				<legend id="<?php echo esc_attr( $tgg->ref( 'filetypes-option-legend' ) ); ?>"><?php
-					echo esc_html( __( 'Acceptable file types', 'contact-form-7' ) );
+					echo esc_html( __( 'Acceptable file types', 'cf7-mf' ) );
 				?></legend>
 				<label><?php
 				echo sprintf(

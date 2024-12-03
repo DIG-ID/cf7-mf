@@ -41,42 +41,170 @@ class Cf7_Mf_Public {
 	private $version;
 
 	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
-	private $btn_tag_name;
-
-	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of the plugin.
-	 * @param      string    $version    The version of this plugin.
+	 * @param   string    $plugin_name       The name of the plugin.
+	 * @param   string    $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
 
-		$this->plugin_name  = $plugin_name;
-		$this->version      = $version;
-		$this->btn_tag_name = 'cf7-mf-upload-button';
+		$this->plugin_name = $plugin_name;
+		$this->version     = $version;
 
-		add_action( 'wpcf7_init', array( $this, 'cf7_mf_add_form_tag_file' ) );
-		add_filter( 'wpcf7_form_enctype', array( $this, 'cf7_mf_form_enctype_filter' ) );
+		// Debug system configuration
+		error_log('CF7-MF: Plugin Initialization');
+		error_log('Upload Max Filesize: ' . ini_get('upload_max_filesize'));
+		error_log('Post Max Size: ' . ini_get('post_max_size'));
+		error_log('Memory Limit: ' . ini_get('memory_limit'));
+		
+		// Check upload directory
+		$this->check_upload_dir();
 
-		//add_filter( 'wpcf7_validate_multifile', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
-		//add_filter( 'wpcf7_validate_multifile*', array( $this, 'cf7_mf_validation_filter' ), 10, 3 );
+		// 1. Form Setup
+		add_action('wpcf7_init', array($this, 'cf7_mf_add_form_tag_file'), 10, 0);
+		add_filter('wpcf7_form_enctype', array($this, 'cf7_mf_form_enctype_filter'), 10, 1);
 
-		add_action( 'wpcf7_swv_create_schema', array( $this, 'cf7_mf_swv_add_file_rules' ), 10, 2 );
+		// 2. Validation Setup - Fixed argument count
+		add_filter('wpcf7_validate_multifile', array($this, 'cf7_mf_validation_filter'), 10, 2);
+		add_filter('wpcf7_validate_multifile*', array($this, 'cf7_mf_validation_filter'), 10, 2);
 
-		add_filter( 'wpcf7_mail_tag_replaced_file', array( $this, 'cf7_mf_file_mail_tag' ), 10, 4 );
-		add_filter( 'wpcf7_mail_tag_replaced_file*', array( $this, 'cf7_mf_file_mail_tag' ), 10, 4 );
+		// 3. Email Handling
+		add_filter('wpcf7_mail_tag_replaced_file', array($this, 'cf7_mf_file_mail_tag'), 10, 4);
+		add_filter('wpcf7_mail_tag_replaced_file*', array($this, 'cf7_mf_file_mail_tag'), 10, 4);
+		add_filter('wpcf7_mail_components', array($this, 'cf7_mf_mail_components'), 10, 3);
 
-		add_filter( 'wpcf7_messages', array( $this, 'cf7_mf_messages' ), 10, 1 );
+		// 4. Messages and Cleanup
+		add_filter('wpcf7_messages', array($this, 'cf7_mf_messages'), 10, 1);
+		add_action('wpcf7_mail_sent', array($this, 'cf7_mf_cleanup_temp_files'));
 
 	}
 
+	/**
+	 * Check upload directory permissions
+	 */
+	public function check_upload_dir() {
+		$upload_dir = wp_upload_dir();
+		error_log('CF7-MF: Checking upload directory: ' . $upload_dir['path']);
+		if (!is_writable($upload_dir['path'])) {
+			error_log('CF7-MF: ERROR - Upload directory is not writable: ' . $upload_dir['path']);
+		}
+	}
+
+	/**
+	 * Validate uploaded files
+	 */
+	public function cf7_mf_validation_filter($result, $tag) {
+		$name = $tag->name;
+		error_log('CF7-MF: Starting validation for field: ' . $name);
+
+		if (empty($_FILES[$name])) {
+			error_log('CF7-MF: No files found for field: ' . $name);
+			if ($tag->is_required()) {
+				$result->invalidate($tag, wpcf7_get_message('invalid_required'));
+			}
+			return $result;
+		}
+
+		$files = $_FILES[$name];
+		$file_count = is_array($files['name']) ? count(array_filter($files['name'])) : 1;
+		error_log('CF7-MF: Number of files uploaded: ' . $file_count);
+
+		// Validate file count
+		$min_files = $tag->get_option('min', 'signed_int', true);
+		$max_files = $tag->get_option('max', 'signed_int', true);
+
+		if ($min_files && $file_count < intval($min_files)) {
+			error_log("CF7-MF: Too few files. Required: $min_files, Got: $file_count");
+			$message = str_replace('__min_file_limit__', intval($min_files), 
+					  wpcf7_get_message('cf7_mb_min_file'));
+			$result->invalidate($tag, $message);
+			return $result;
+		}
+
+		if ($max_files && $file_count > intval($max_files)) {
+			error_log("CF7-MF: Too many files. Maximum: $max_files, Got: $file_count");
+			$message = str_replace('__max_file_limit__', intval($max_files), 
+					  wpcf7_get_message('cf7_mb_max_file'));
+			$result->invalidate($tag, $message);
+			return $result;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Process mail components
+	 */
+	public function cf7_mf_mail_components($components, $form, $mail) {
+		error_log('CF7-MF: Processing mail components');
+		
+		try {
+			$submission = WPCF7_Submission::get_instance();
+			if (!$submission) {
+				error_log('CF7-MF: No submission instance found');
+				return $components;
+			}
+
+			$uploaded_files = $submission->uploaded_files();
+			if (empty($uploaded_files)) {
+				error_log('CF7-MF: No uploaded files found');
+				return $components;
+			}
+
+			$attachments = isset($components['attachments']) 
+						  ? $components['attachments'] : array();
+
+			foreach ($uploaded_files as $name => $paths) {
+				foreach ((array) $paths as $path) {
+					if (!empty($path) && file_exists($path)) {
+						error_log("CF7-MF: Adding attachment: $path");
+						$attachments[] = $path;
+					}
+				}
+			}
+
+			if (!empty($attachments)) {
+				$components['attachments'] = array_unique($attachments);
+			}
+
+		} catch (Exception $e) {
+			error_log('CF7-MF: Error in mail components: ' . $e->getMessage());
+		}
+		
+		return $components;
+	}
+
+	/**
+	 * Clean up temporary files
+	 */
+	public function cf7_mf_cleanup_temp_files($contact_form) {
+		error_log('CF7-MF: Starting cleanup');
+		
+		$submission = WPCF7_Submission::get_instance();
+		if (!$submission) {
+			error_log('CF7-MF: No submission instance for cleanup');
+			return;
+		}
+
+		$uploaded_files = $submission->uploaded_files();
+		if (empty($uploaded_files)) {
+			error_log('CF7-MF: No files to cleanup');
+			return;
+		}
+
+		foreach ($uploaded_files as $name => $paths) {
+			foreach ((array) $paths as $path) {
+				if (file_exists($path)) {
+					if (@unlink($path)) {
+						error_log("CF7-MF: Deleted file: $path");
+					} else {
+						error_log("CF7-MF: Failed to delete: $path");
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * Register the stylesheets for the public-facing side of the site.
@@ -150,10 +278,11 @@ class Cf7_Mf_Public {
 	 */
 	public function cf7_mf_file_form_tag_handler( $tag ) {
 
+		$tag = new WPCF7_FormTag( $tag );
+
 		if ( empty( $tag->name ) ) {
 			return '';
 		}
-		$tag = new WPCF7_FormTag( $tag );
 
 		$validation_error = wpcf7_get_validation_error( $tag->name );
 		$class            = wpcf7_form_controls_class( $tag->type );
@@ -167,27 +296,21 @@ class Cf7_Mf_Public {
 		$atts['size']        = $tag->get_size_option( '40' );
 		$atts['class']       = $tag->get_class_option( $class );
 		$atts['id']          = $tag->get_id_option();
-		$atts['file-limit']  = $tag->get_option( 'file-limit', 'int', true ) ?: 1024 * 1024;
-		$atts['total-limit'] = $tag->get_option( 'total-limit', 'int', true ) ?: 10 * 1024 * 1024;
-		$atts['min']         = $tag->get_option( 'min', 'signed_num', true );
-		$atts['max']         = $tag->get_option( 'max', 'signed_num', true );
-
-		$atts['width']       = $tag->get_option( 'w', 'int', true ) ?: 720;
-		$atts['height']      = $tag->get_option( 'h', 'int', true ) ?: 480;
-
-		$atts['tabindex']     = $tag->get_option( 'tabindex', 'signed_int', true );
+		$atts['capture']     = $tag->get_option( 'capture', '(user|environment)', true );
+		$atts['tabindex']    = $tag->get_option( 'tabindex', 'signed_int', true );
 
 		$atts['accept'] = wpcf7_acceptable_filetypes(
 			$tag->get_option( 'filetypes' ), 'attr'
 		);
 
-		$values = isset( $tag->values[0] ) ? $tag->values[0] : '';
-		if ( empty( $values ) ) :
-			$values = __( 'Upload', 'cf7-mf' );
-		endif;
+		$atts['file-limit']  = $tag->get_option( 'file-limit', 'int', true ) ?: 1024 * 1024;
+		$atts['total-limit'] = $tag->get_option( 'total-limit', 'int', true ) ?: 10 * 1024 * 1024;
 
-		$upload_label = $atts['value'] = $values;
+		$atts['min']         = $tag->get_option( 'min', 'signed_num', true );
+		$atts['max']         = $tag->get_option( 'max', 'signed_num', true );
 
+		$atts['width']       = $tag->get_option( 'w', 'int', true ) ?: 720;
+		$atts['height']      = $tag->get_option( 'h', 'int', true ) ?: 480;
 
 		if ( $tag->is_required() ) {
 			$atts['aria-required'] = 'true';
@@ -202,75 +325,48 @@ class Cf7_Mf_Public {
 			$atts['aria-invalid'] = 'false';
 		}
 
-		if ( 'range' === $tag->basetype ) {
-			if ( ! wpcf7_is_number( $atts['min'] ) ) {
-				$atts['min'] = '0';
-			}
+		if ( ! wpcf7_is_number( $atts['min'] ) ) {
+			$atts['min'] = '0';
+		}
 
-			if ( ! wpcf7_is_number( $atts['max'] ) ) {
-				$atts['max'] = '10';
-			}
-
-			if ( '' === $atts['value'] ) {
-				if ( $atts['min'] < $atts['max'] ) {
-					$atts['value'] = ( $atts['min'] + $atts['max'] ) / 2;
-				} else {
-					$atts['value'] = $atts['min'];
-				}
-			}
+		if ( ! wpcf7_is_number( $atts['max'] ) ) {
+			$atts['max'] = '10';
 		}
 
 		$atts['type']     = 'file';
 		$atts['name']     = $tag->name . '[]';
 		$atts['multiple'] = 'multiple';
 
-		/*$html = sprintf(
-			'<span class="wpcf7-form-control-wrap" data-name="%1$s"><input %2$s />%3$s</span>',
-			esc_attr( $tag->name ),
-			wpcf7_format_atts( $atts ),
-			$validation_error
-		);*/
-
-		$button_name = $tag->name . '-' . $this->btn_tag_name;
-
 		$html = '';
-		//$html .= '<span class="wpcf7-form-control-wrap" data-name="' . $button_name . '"><button type="button" name="' . $button_name . '" class="button button-primary qbutton" id="cf7-mf-add-file" value="' . $upload_label . '"></span>';
-
-
-
-		$html .= sprintf(
-			'<span class="wpcf7-form-control-wrap" data-name="%1$s">',
-			esc_attr( $tag->name ),
-			$validation_error
-		);
-
+		$html .= '<div class="cf7-mf-container">';
 		$html .= '<div class="cf7-mf-content-wrapper">';
-		// Preview area.<figure><span class="delete-icon"></span><img src="https://picsum.photos/720/480" alt=""></figure>
-		$html .= '<div class="cf7-mf-preview"></div>';
-		$html .= sprintf(
-			'<div class="cf7-mf-drag-drop-zone" data-file-limit="%1$d" data-total-limit="%2$d" data-width="%3$d" data-height="%4$d">',
-			esc_attr( $atts['file-limit'] ),
-			esc_attr( $atts['total-limit'] ),
-			esc_attr( $atts['width'] ),
-			esc_attr( $atts['height'] )
-		);
+
+		$html .= '<div class="cf7-mf-drag-drop-zone">';
 		$html .= '<span class="cf7-mf-add-icon"></span>';
 		$html .= '<span class="cf7-mf-add-text">' . esc_html__( 'Drop files here or click to add.', 'cf7-mf' ) . '</span>';
 		$html .= '</div>';
 
+		// Preview area.<figure><span class="delete-icon"></span><img src="https://picsum.photos/720/480" alt=""></figure>
+		$html .= '<div class="cf7-mf-preview" ></div>';
 		$html .= '</div>';
-
-		$html .= '</span">';
 
 		// Hidden input for submitting files.
 		$html .= sprintf(
-			'<input %2$s />%3$s',
+			'<span class="wpcf7-form-control-wrap" data-name="%1$s"><input %2$s />%3$s</span>',
 			esc_attr( $tag->name ),
 			wpcf7_format_atts( $atts ),
 			$validation_error
 		);
 
-		$html = '<div id="cf7-mf-container">' . $html . '<p class="cf7-mf-feedback-message"></p></div>';
+		$html .= '<div class=".cf7-mf-feedback-message"></div>
+		<div class="cf7-mf-progress-bar-wrapper" style="display: none;">
+                <div class="cf7-mf-progress-bar">
+                    <div class="cf7-mf-progress-bar-fill"></div>
+                </div>
+                <div class="cf7-mf-progress-text">0%</div>
+            </div>';
+
+		$html .= '</div>';
 
 		return $html;
 
@@ -284,261 +380,20 @@ class Cf7_Mf_Public {
 	 */
 	public function cf7_mf_form_enctype_filter( $enctype ) {
 
-		/* Enctype filter */
-		$multipart = (bool) wpcf7_scan_form_tags( array( 'type' => array( 'multifile', 'multifile*' ) ) );
-
-		if ( $multipart ) :
+		$multipart = (bool) wpcf7_scan_form_tags( array(
+			'feature' => 'file-uploading',
+		) );
+	
+		if ( $multipart ) {
 			$enctype = 'multipart/form-data';
-		endif;
+		}
+	
 		return $enctype;
 
 	}
 
 	/**
-	 * Undocumented function
-	 *
-	 * @param [type] $schema
-	 * @param [type] $contact_form
-	 * @return void
-	 */
-	public function cf7_mf_swv_add_file_rules( $schema, $contact_form ) {
-
-		$tags = $contact_form->scan_form_tags(
-			array(
-				'basetype' => array( 'file' ),
-			)
-		);
-
-		foreach ( $tags as $tag ) :
-			// Check if the file field is required
-			if ( $tag->is_required() ) {
-				$schema->add_rule(
-					wpcf7_swv_create_rule( 'requiredfile', array(
-						'field' => $tag->name,
-						'error' => wpcf7_get_message( 'invalid_required' ),
-					) )
-				);
-			}
-
-			// File type validation (file extensions)
-			$schema->add_rule(
-				wpcf7_swv_create_rule( 'file', array(
-					'field' => $tag->name,
-					'accept' => explode( ',', wpcf7_acceptable_filetypes(
-						$tag->get_option( 'filetypes' ), 'attr'
-					) ),
-					'error' => wpcf7_get_message( 'upload_file_type_invalid' ),
-				) )
-			);
-
-			// File size validation
-			$schema->add_rule(
-				wpcf7_swv_create_rule( 'maxfilesize', array(
-					'field' => $tag->name,
-					'threshold' => $tag->get_limit_option(),
-					'error' => wpcf7_get_message( 'upload_file_too_large' ),
-				) )
-			);
-
-			// Min and Max file count validation
-			$min_files = $tag->get_option( 'min' );
-			$max_files = $tag->get_option( 'max' );
-
-			if ( ! empty( $min_files ) ) {
-				$schema->add_rule(
-					wpcf7_swv_create_rule( 'minfilecount', array(
-						'field' => $tag->name,
-						'min'    => $min_files[0],
-						'error'  => wpcf7_get_message( 'min_file_count_validation_msg' ),
-					) )
-				);
-			}
-
-			if ( ! empty( $max_files ) ) {
-				$schema->add_rule(
-					wpcf7_swv_create_rule( 'maxfilecount', array(
-						'field' => $tag->name,
-						'max'    => $max_files[0],
-						'error'  => wpcf7_get_message( 'max_file_count_validation_msg' ),
-					) )
-				);
-			}
-		endforeach;
-
-	}
-
-	/**
-	 * Undocumented function
-	 *
-	 * @return void
-	 */
-	public function cf7_mf_file_mail_tag( $replaced, $submitted, $html, $mail_tag ) {
-
-		$submission = WPCF7_Submission::get_instance();
-		$uploaded_files = $submission->uploaded_files();
-		$name = $mail_tag->field_name();
-
-		if ( ! empty( $uploaded_files[$name] ) ) {
-			$paths = (array) $uploaded_files[$name];
-			$paths = array_map( 'wp_basename', $paths );
-
-			$replaced = wpcf7_flat_join( $paths, array(
-				'separator' => wp_get_list_item_separator(),
-			) );
-		}
-
-		return $replaced;
-
-	}
-
-
-
-
-	/**
-	 * Undocumented function
-	 *
-	 * @param [type] $result
-	 * @param [type] $tag
-	 * @param [type] $args
-	 * @return void
-	 */
-	public function cf7_mf_validation_filter( $result, $tag, $args ) {
-		$args = wp_parse_args($args, array());
-		global $latest_contact_form_7;
-
-		if ($latest_contact_form_7) {
-			$tag = new WPCF7_FormTag($tag);
-		} else {
-			$tag = new WPCF7_Shortcode($tag);
-		}
-
-		$name = $tag->name;
-		$id = $tag->get_id_option();
-		$uniqid = uniqid();
-		$original_files_array = isset($_FILES[$name]) ? $_FILES[$name] : null;
-		
-		// If no files were uploaded, return an empty array for validation
-		if ($original_files_array === null) {
-			$original_files_array['tmp_name'] = array();
-		}
-
-		if (isset($_FILES[$name]) && isset($_FILES[$name]['name'])) {
-				$total = count($_FILES[$name]['name']);
-		} else {
-				$total = 0;
-		}
-
-		$files = array();
-		$new_files = array();
-
-		// Collect all uploaded files
-		for ($i = 0; $i < $total; $i++) {
-			if (empty($original_files_array['tmp_name'][$i])) {
-				continue;
-			}
-			$files[] = array(
-				'name'     => $original_files_array['name'][$i],
-				'type'     => $original_files_array['type'][$i],
-				'tmp_name' => $original_files_array['tmp_name'][$i],
-				'error'    => $original_files_array['error'][$i],
-				'size'     => $original_files_array['size'][$i]
-			);
-		}
-
-		// Validate minimum and maximum file counts
-		$file_count = count($files);
-		$min_file_allow = $tag->get_option('min');
-		if (!empty($min_file_allow) && $file_count < $min_file_allow[0]) {
-			$message = wpcf7_get_message('min_file_count_validation_msg');
-			$message = str_replace('__min_file_limit__', $min_file_allow[0], $message);
-			$result->invalidate($tag, $message);
-			return $result;
-		}
-
-		$max_file_allow = $tag->get_option('max');
-		if (!empty($max_file_allow) && $file_count > $max_file_allow[0]) {
-			$message = wpcf7_get_message('max_file_count_validation_msg');
-			$message = str_replace('__max_file_limit__', $max_file_allow[0], $message);
-			$result->invalidate($tag, $message);
-			return $result;
-		}
-
-		// Loop through each file for validation
-		foreach ($files as $file) {
-			// Check for upload errors
-			if ($file['error'] && UPLOAD_ERR_NO_FILE != $file['error']) {
-				$result->invalidate($tag, wpcf7_get_message('upload_failed_php_error'));
-				return $result;
-			}
-
-			// Validate allowed file types
-			$allowed_file_types = array();
-			if ($file_types_a = $tag->get_option('filetypes')) {
-				foreach ($file_types_a as $file_types) {
-					$file_types = explode('|', $file_types);
-					foreach ($file_types as $file_type) {
-						$allowed_file_types[] = trim($file_type, '.');
-					}
-				}
-			}
-
-			$allowed_file_types = array_unique($allowed_file_types);
-			$file_type_pattern = implode('|', $allowed_file_types);
-
-			// Default file types if none are set
-			if ( empty( $file_type_pattern) ) {
-				$file_type_pattern = 'jpg|jpeg|png|gif|pdf|doc|docx|ppt|pptx|odt|avi|ogg|m4a|mov|mp3|mp4|mpg|wav|wmv|txt';
-			}
-
-			$file_type_pattern = '/\.' . $file_type_pattern . '$/i';
-			if (!preg_match($file_type_pattern, $file['name'])) {
-				$result->invalidate($tag, wpcf7_get_message('upload_file_type_invalid'));
-				return $result;
-			}
-
-			// Validate file size
-			$allowed_size = apply_filters('cf7_mf_max_size', 10485760); // default 10 MB
-			if ($file['size'] > $allowed_size) {
-				$result->invalidate($tag, wpcf7_get_message('upload_file_too_large'));
-				return $result;
-			}
-
-			// Process file uploads: move files to the upload directory
-			wpcf7_init_uploads();
-			$uploads_dir = wpcf7_upload_tmp_dir();
-			$uploads_dir = wpcf7_maybe_add_random_dir($uploads_dir);
-			$filename = sanitize_file_name($file['name']);
-			$filename = wp_unique_filename($uploads_dir, $filename);
-			$new_file = trailingslashit($uploads_dir) . $filename;
-
-			// Move the file
-			if (false === @move_uploaded_file($file['tmp_name'], $new_file)) {
-				$result->invalidate($tag, wpcf7_get_message('upload_failed'));
-				return $result;
-			}
-
-			$new_files[] = $new_file;
-			@chmod($new_file, 0400); // Make file readable only by owner
-		}
-
-		// Ensure that at least one file is uploaded if the field is required
-		if (count($files) == 0 && $tag->is_required()) {
-			$result->invalidate($tag, wpcf7_get_message('invalid_required'));
-			return $result;
-		}
-
-		// Add uploaded files to submission
-		if ($submission = WPCF7_Submission::get_instance()) {
-			foreach ($new_files as $new_file) {
-				$submission->add_uploaded_file($name, $new_file);
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * Undocumented function
+	 * Add custom messages
 	 *
 	 * @return void
 	 */
@@ -550,10 +405,6 @@ class Cf7_Mf_Public {
 				'upload_failed' => array(
 					'description' => __( 'Uploading a file fails for any reason', 'cf7-mf' ),
 					'default'     => __( 'There was an error uploading the file to the server.', 'cf7-mf' ),
-				),
-				'zipping_failed' => array(
-					'description' => __( 'Zipping files fails for any reason', 'cf7-mf' ),
-					'default'     => __( 'There was an error in zippng the files.', 'cf7-mf' ),
 				),
 				'upload_file_type_invalid' => array(
 					'description' => __( 'Uploaded file is not allowed for file type', 'cf7-mf' ),
@@ -577,6 +428,35 @@ class Cf7_Mf_Public {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Handle the mail components with the processed files
+	 *
+	 * @param [type] $components
+	 * @param [type] $form
+	 * @param [type] $mail
+	 * @return void
+	 */
+	public function cf7_mf_file_mail_tag( $replaced, $submitted, $html, $mail_tag ) {
+
+		$submission = WPCF7_Submission::get_instance();
+		$uploaded_files = $submission->uploaded_files();
+		$name = $mail_tag->field_name();
+
+		// Check if there are uploaded files for this field name.
+		if ( ! empty( $uploaded_files[$name] ) ) {
+			$paths = (array) $uploaded_files[$name]; // Get the files for this field.
+			$paths = array_map( 'wp_basename', $paths ); // Extract base names.
+
+			// Replace the mail tag with the file paths.
+			$replaced = wpcf7_flat_join( $paths, array(
+				'separator' => wp_get_list_item_separator(),
+			) );
+		}
+
+		return $replaced;
+
 	}
 
 }

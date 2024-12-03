@@ -4,16 +4,17 @@
  */
 
 
-#cf7-mf-container {
+.cf7-mf-container {
   display: flex;
   flex-direction: column;
 }
 
-#cf7-mf-container .cf7-mf-content-wrapper {
+.cf7-mf-container .cf7-mf-content-wrapper {
   display: flex;
+  gap: 32px;
 }
 
-#cf7-mf-container .cf7-mf-drag-drop-zone {
+.cf7-mf-container .cf7-mf-drag-drop-zone {
   background-color: #E9F2FF;
   width: 190px;
   min-width: 190px;
@@ -34,16 +35,16 @@
   cursor: pointer;
 }
 
-#cf7-mf-container .wpcf7-multifile {
+.cf7-mf-container .wpcf7-multifile {
   display: none;
 }
 
 
-#cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-text {
+.cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-text {
   margin-top: 8px;
 }
 
-#cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-icon {
+.cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-icon {
   width: 34px;
   height: 34px;
   display: block;
@@ -53,19 +54,19 @@
   background-repeat: no-repeat;
 }
 
-#cf7-mf-container .cf7-mf-drag-drop-zone.drag-over {
+.cf7-mf-container .cf7-mf-drag-drop-zone.drag-over {
   border-color: #2b7bff;
   background-color: #e8f2ff;
 }
 
-#cf7-mf-container .cf7-mf-preview {
+.cf7-mf-container .cf7-mf-preview {
   display: flex;
   flex-wrap: wrap;
   gap: 32px;
 
 }
 
-#cf7-mf-container .cf7-mf-preview figure {
+.cf7-mf-container .cf7-mf-preview figure {
   background-color: #dfdfdf;
   width: 190px;
   height: 170px;
@@ -79,7 +80,7 @@
   position: relative;
 }
 
-#cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon {
+.cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon {
   position: absolute;
   right: 8px;
   top: 8px;
@@ -93,11 +94,11 @@
   z-index: 990;
 }
 
-#cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon:hover {
+.cf7-mf-container .cf7-mf-preview figure .cf7-mf-delete-icon:hover {
   cursor: pointer;
 }
 
-#cf7-mf-container .cf7-mf-preview figure img {
+.cf7-mf-container .cf7-mf-preview figure img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -111,4 +112,29 @@
   font-size: 14px;
   margin-top: 10px;
   display: none;
+}
+
+.cf7-mf-progress-bar-wrapper {
+    margin: 10px 0;
+    width: 100%;
+}
+
+.cf7-mf-progress-bar {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+}
+
+.cf7-mf-progress-bar-fill {
+    background-color: #4CAF50;
+    height: 100%;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+.cf7-mf-progress-text {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 14px;
 }

@@ -1,244 +1,253 @@
-(function( $ ) {
-	'use strict';
+(function ($) {
+    "use strict";
 
-	/**
-	 * All of the code for your public-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+    $(document).ready(function () {
+        // Helper: Convert file to data URL
+        const fileToDataURL = (file) => {
+            console.log('Converting to DataURL:', file.name);
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => {
+                    console.error('FileReader error:', error);
+                    reject(error);
+                };
+                reader.readAsDataURL(file);
+            });
+        };
 
-		$(document).ready(function () {
-			// Helper: Convert file to data URL (Base64)
-			const fileToDataURL = (file) =>
-					new Promise((resolve, reject) => {
-							const reader = new FileReader();
-							reader.onload = () => resolve(reader.result);
-							reader.onerror = reject;
-							reader.readAsDataURL(file);
-					});
+        // Helper: Resize image maintaining aspect ratio
+        const resizeImage = (file, maxWidth, maxHeight, maxSizeKB) => {
+            console.log('Resizing image:', {
+                file: file.name,
+                maxWidth,
+                maxHeight,
+                maxSizeKB
+            });
 
-			// Helper: Resize image to maintain aspect ratio and max size
-			const resizeImage = (file, maxWidth, maxHeight, maxSizeKB) =>
-					new Promise(async (resolve, reject) => {
-							const img = new Image();
-							const dataUrl = await fileToDataURL(file);
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const img = new Image();
+                    const dataUrl = await fileToDataURL(file);
+                    
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        let newWidth = img.width;
+                        let newHeight = img.height;
 
-							img.src = dataUrl;
-							img.onload = () => {
-									const canvas = document.createElement("canvas");
-									let { width, height } = img;
+                        // Calculate new dimensions
+                        if (newWidth > newHeight) {
+                            if (newWidth > maxWidth) {
+                                newHeight *= maxWidth / newWidth;
+                                newWidth = maxWidth;
+                            }
+                        } else {
+                            if (newHeight > maxHeight) {
+                                newWidth *= maxHeight / newHeight;
+                                newHeight = maxHeight;
+                            }
+                        }
 
-									// Maintain aspect ratio while resizing
-									if (width > height) {
-											if (width > maxWidth) {
-													height *= maxWidth / width;
-													width = maxWidth;
-											}
-									} else {
-											if (height > maxHeight) {
-													width *= maxHeight / height;
-													height = maxHeight;
-											}
-									}
+                        console.log('New dimensions:', {
+                            width: Math.round(newWidth),
+                            height: Math.round(newHeight)
+                        });
 
-									// Resize image on canvas
-									canvas.width = width;
-									canvas.height = height;
-									const ctx = canvas.getContext("2d");
-									ctx.drawImage(img, 0, 0, width, height);
+                        canvas.width = newWidth;
+                        canvas.height = newHeight;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-									// Convert to blob and check file size
-									canvas.toBlob(
-											(blob) => {
-													if (blob.size / 1024 > maxSizeKB) {
-															// Compress further if it's too big
-															canvas.toBlob(resolve, "image/jpeg", 0.8); // Adjust compression level
-													} else {
-															resolve(blob);
-													}
-											},
-											file.type,
-											1
-									);
-							};
-							img.onerror = reject;
-					});
+                        canvas.toBlob(
+                            (blob) => {
+                                const blobSize = blob.size / 1024;
+                                console.log('Blob size:', Math.round(blobSize) + 'KB');
+                                
+                                if (blobSize > maxSizeKB) {
+                                    console.log('Compressing image further');
+                                    canvas.toBlob(
+                                        resolve,
+                                        file.type,
+                                        0.7 // Compression quality
+                                    );
+                                } else {
+                                    resolve(blob);
+                                }
+                            },
+                            file.type,
+                            1
+                        );
+                    };
 
-			// Main function: Handle drag-and-drop or file input
-			const initializeFileHandlers = (form) => {
-					const dragDropZone = form.find(".cf7-mf-drag-drop-zone");
-					const previewContainer = form.find(".cf7-mf-preview");
-					const hiddenInput = form.find(".wpcf7-form-control.wpcf7-multifile");
-					const feedbackMessage = form.find(".cf7-mf-feedback-message");
+                    img.onerror = (error) => {
+                        console.error('Image loading error:', error);
+                        reject(error);
+                    };
 
-					let filesArray = [];
+                    img.src = dataUrl;
+                } catch (error) {
+                    console.error('Resize error:', error);
+                    reject(error);
+                }
+            });
+        };
 
-					// Update preview with selected files
-					const updatePreview = () => {
-							previewContainer.empty(); // Clear preview container
-							filesArray.forEach((file, index) => {
-									const figure = $("<figure>").html(`
-											<img src="${file.preview}" alt="Preview">
-											<span class="cf7-mf-delete-icon" data-index="${index}"></span>
-									`);
-									previewContainer.append(figure);
-							});
-					};
+        // Initialize file handlers
+        $(".cf7-mf-container").each(function () {
+            const container = $(this);
+            const dragDropZone = container.find(".cf7-mf-drag-drop-zone");
+            const previewContainer = container.find(".cf7-mf-preview");
+            const hiddenInput = container.find("input[type='file']");
+            const feedbackMessage = container.find(".cf7-mf-feedback-message");
 
-					// Validate and process selected files
-					const processFiles = async (files) => {
-							for (let file of files) {
-									// Validate file type (only images allowed)
-									if (!file.type.startsWith("image/")) {
-											feedbackMessage.text("Only image files are allowed!").show();
-											continue;
-									}
+            // Get configuration from data attributes
+            const maxWidth = parseInt(dragDropZone.data("width")) || 800;
+            const maxHeight = parseInt(dragDropZone.data("height")) || 600;
+            const maxFileSize = parseInt(dragDropZone.data("file-limit")) || 1024;
+            const totalLimit = parseInt(dragDropZone.data("total-limit")) || 10;
+            const acceptedTypes = dragDropZone.data("accept") || "image/*";
 
-									// Resize image and process it
-									try {
-											const resizedBlob = await resizeImage(
-													file,
-													dragDropZone.data("width") || 720,
-													dragDropZone.data("height") || 480,
-													dragDropZone.data("file-limit") || 1024 // Max size in KB
-											);
+            // Initialize files array
+            container.data('filesArray', []);
 
-											const resizedFile = new File([resizedBlob], file.name, {
-													type: resizedBlob.type,
-											});
+            // Update preview
+            const updatePreview = (filesArray) => {
+                console.group('Updating Preview');
+                previewContainer.empty();
+                
+                filesArray.forEach((item, index) => {
+                    console.log(`Adding preview for: ${item.file.name}`);
+                    const figure = $("<figure>").html(`
+                        <img src="${item.preview}" alt="Preview">
+                        <span class="cf7-mf-delete-icon" data-index="${index}"></span>
+                    `);
+                    previewContainer.append(figure);
+                });
+                console.groupEnd();
+            };
 
-											// Create a preview for the resized image
-											const preview = await fileToDataURL(resizedFile);
-											filesArray.push({ file: resizedFile, preview });
-									} catch (error) {
-											feedbackMessage.text("Error resizing image. Please try again.").show();
-											return;
-									}
-							}
+            // Update hidden input
+            const updateHiddenInput = (filesArray) => {
+                console.log('Updating hidden input:', filesArray.length, 'files');
+                const dataTransfer = new DataTransfer();
+                filesArray.forEach(({ file }) => dataTransfer.items.add(file));
+                hiddenInput[0].files = dataTransfer.files;
+            };
 
-							updatePreview();
-							updateHiddenInput();
-					};
+            // Process files
+            const processFiles = async (files) => {
+                console.group('Processing Files');
+                try {
+                    let filesArray = container.data('filesArray') || [];
+                    
+                    // Validate total files
+                    if (filesArray.length + files.length > totalLimit) {
+                        throw new Error(`Maximum ${totalLimit} files allowed`);
+                    }
 
-					// Update the hidden input with selected files
-					const updateHiddenInput = () => {
-							const dataTransfer = new DataTransfer();
-							filesArray.forEach(({ file }) => dataTransfer.items.add(file));
-							hiddenInput[0].files = dataTransfer.files;
-					};
+                    // Update progress
+                    const updateProgress = (current, total) => {
+                        const progress = (current / total) * 100;
+                        const progressBar = container.find('.cf7-mf-progress-bar-fill');
+                        const progressText = container.find('.cf7-mf-progress-text');
+                        
+                        container.find('.cf7-mf-progress-bar-wrapper').show();
+                        progressBar.css('width', `${progress}%`);
+                        progressText.text(`${Math.round(progress)}%`);
+                        
+                        console.log('Progress:', Math.round(progress) + '%');
+                    };
 
-					// Handle drag over event (to provide visual feedback)
-					const handleDragOver = (event) => {
-							event.preventDefault();
-							dragDropZone.addClass("drag-over");
-					};
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        console.log('Processing:', file.name);
 
-					const handleDragLeave = () => {
-							dragDropZone.removeClass("drag-over");
-					};
+                        // Validate file type
+                        if (!file.type.match(acceptedTypes)) {
+                            console.warn('Invalid file type:', file.type);
+                            feedbackMessage.text(`Invalid file type: ${file.type}`).show();
+                            continue;
+                        }
 
-					// Handle file drop event
-					const handleDrop = (event) => {
-							event.preventDefault();
-							dragDropZone.removeClass("drag-over");
-							const files = event.originalEvent.dataTransfer.files;
-							processFiles(files);
-					};
+                        try {
+                            if (file.type.startsWith('image/')) {
+                                const resizedBlob = await resizeImage(file, maxWidth, maxHeight, maxFileSize);
+                                const resizedFile = new File([resizedBlob], file.name, { type: resizedBlob.type });
+                                const preview = await fileToDataURL(resizedFile);
+                                filesArray.push({ file: resizedFile, preview });
+                            } else {
+                                const preview = await fileToDataURL(file);
+                                filesArray.push({ file, preview });
+                            }
+                            
+                            updateProgress(i + 1, files.length);
+                        } catch (error) {
+                            console.error('Error processing file:', error);
+                            feedbackMessage.text(`Error processing ${file.name}`).show();
+                        }
+                    }
 
-					// Handle file input selection (when the user clicks to select files)
-					const handleFileSelection = (event) => {
-							const files = event.target.files;
-							processFiles(files);
-					};
+                    // Update container data and UI
+                    container.data('filesArray', filesArray);
+                    updatePreview(filesArray);
+                    updateHiddenInput(filesArray);
 
-					// Handle file removal from the preview
-					const handleDelete = (event) => {
-							if ($(event.target).hasClass("cf7-mf-delete-icon")) {
-									const index = parseInt($(event.target).data("index"), 10);
-									filesArray.splice(index, 1);
-									updatePreview();
-									updateHiddenInput();
-							}
-					};
+                    // Hide progress after delay
+                    setTimeout(() => {
+                        container.find('.cf7-mf-progress-bar-wrapper').hide();
+                    }, 1000);
 
-					// Event listeners for drag-and-drop and file input
-					dragDropZone.on("dragover", handleDragOver);
-					dragDropZone.on("dragleave", handleDragLeave);
-					dragDropZone.on("drop", handleDrop);
-					dragDropZone.on("click", () => hiddenInput.click());
-					hiddenInput.on("change", handleFileSelection);
-					previewContainer.on("click", handleDelete);
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    feedbackMessage.text(error.message).show();
+                }
+                console.groupEnd();
+            };
 
-					// Clear feedback messages after some time
-					setTimeout(() => {
-							feedbackMessage.fadeOut();
-					}, 5000);
-			};
+            // Event handlers
+            dragDropZone
+                .on("dragover", (e) => {
+                    e.preventDefault();
+                    dragDropZone.addClass("drag-over");
+                })
+                .on("dragleave", () => {
+                    dragDropZone.removeClass("drag-over");
+                })
+                .on("drop", async (e) => {
+                    e.preventDefault();
+                    dragDropZone.removeClass("drag-over");
+                    await processFiles(e.originalEvent.dataTransfer.files);
+                })
+                .on("click", () => hiddenInput.click());
 
-			// Initialize handlers for each form
-			$(".wpcf7").each(function () {
-					const form = $(this);
-					if (form.find(".cf7-mf-drag-drop-zone").length > 0) {
-							initializeFileHandlers(form);
-					}
-			});
+            hiddenInput.on("change", async (e) => {
+                await processFiles(e.target.files);
+            });
 
-			// Handle form submission (optional - validate files before submitting)
-			$(".wpcf7").on("submit", function (event) {
-					const form = $(this);
-					const hiddenInput = form.find(".wpcf7-form-control.wpcf7-multifile");
+            // Delete handler
+            previewContainer.on("click", ".cf7-mf-delete-icon", function() {
+                const index = parseInt($(this).data("index"));
+                console.log('Deleting file at index:', index);
+                
+                let filesArray = container.data('filesArray') || [];
+                if (!isNaN(index) && index >= 0 && index < filesArray.length) {
+                    filesArray.splice(index, 1);
+                    container.data('filesArray', filesArray);
+                    updatePreview(filesArray);
+                    updateHiddenInput(filesArray);
+                }
+            });
 
-					// If there are no files selected, prevent submission and show error
-					if (hiddenInput[0].files.length === 0) {
-							form.find(".cf7-mf-feedback-message").text("Please select at least one file.").show();
-							event.preventDefault(); // Prevent form submission
-					}
-			});
-
-			// Handle file input after form submission (for clearing or resetting)
-			document.addEventListener('wpcf7mailsent', function(event) {
-					$(".cf7-mf-preview p").remove();
-			});
-
-			// To avoid "Bad Request" error in Safari when file input is empty
-			$('.wpcf7-form').submit(function () {
-					var inputs = $('.wpcf7-form input[type="file"]:not([disabled])');
-					inputs.each(function (_, input) {
-							if (input.files.length > 0) return;
-							$(input).prop('disabled', true);
-					});
-			});
-
-			// Re-enable file inputs after form submission
-			document.addEventListener('wpcf7submit', function (event) {
-					var inputs = $('.wpcf7-form input[type="file"][disabled]');
-					inputs.each(function (_, input) {
-							$(input).prop('disabled', false);
-					});
-			}, false);
-	});
-
-
-})( jQuery );
+            // Form submission cleanup
+            document.addEventListener("wpcf7mailsent", function (event) {
+                if (event.target.contains(container[0])) {
+                    console.log('Form submitted, clearing files');
+                    container.data('filesArray', []);
+                    updatePreview([]);
+                    updateHiddenInput([]);
+                    feedbackMessage.hide();
+                }
+            });
+        });
+    });
+})(jQuery);
