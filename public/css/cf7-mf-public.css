@@ -11,7 +11,10 @@
 
 .cf7-mf-container .cf7-mf-content-wrapper {
   display: flex;
-  gap: 32px;
+  gap: 16px;
+  background-color: #f4f8fc;
+  border-radius: 20px;
+  padding: 16px;
 }
 
 .cf7-mf-container .cf7-mf-drag-drop-zone {
@@ -42,6 +45,7 @@
 
 .cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-text {
   margin-top: 8px;
+  font-family: 'DM-Sans', sans-serif;
 }
 
 .cf7-mf-container .cf7-mf-drag-drop-zone .cf7-mf-add-icon {
@@ -54,7 +58,7 @@
   background-repeat: no-repeat;
 }
 
-.cf7-mf-container .cf7-mf-drag-drop-zone.drag-over {
+.cf7-mf-container .cf7-mf-drag-drop-zone::hover {
   border-color: #2b7bff;
   background-color: #e8f2ff;
 }
@@ -62,13 +66,13 @@
 .cf7-mf-container .cf7-mf-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px;
+  gap: 16px;
 
 }
 
 .cf7-mf-container .cf7-mf-preview figure {
   background-color: #dfdfdf;
-  width: 190px;
+  width: 170px;
   height: 170px;
   display: flex;
   flex-direction: column;
@@ -112,16 +116,18 @@
   font-size: 14px;
   margin-top: 10px;
   display: none;
+  font-family: 'DM-Sans', sans-serif;
 }
 
 .cf7-mf-progress-bar-wrapper {
     margin: 10px 0;
     width: 100%;
+    
 }
 
 .cf7-mf-progress-bar {
     background-color: #f0f0f0;
-    border-radius: 4px;
+    border-radius: 90px;
     height: 20px;
     overflow: hidden;
 }
@@ -137,4 +143,31 @@
     text-align: center;
     margin-top: 5px;
     font-size: 14px;
+    font-family: 'DM-Sans', sans-serif;
 }
+
+@media ( max-width: 1024px ) {
+  .cf7-mf-container .cf7-mf-content-wrapper {
+    align-items: center;
+  }
+
+  .cf7-mf-container .cf7-mf-preview figure {
+    width: 85px;
+    height: 85px;
+  }
+}
+
+@media ( max-width: 640px ) {
+  .cf7-mf-container .cf7-mf-content-wrapper {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .cf7-mf-container .cf7-mf-preview {
+    justify-content: center;
+    align-items: center;
+  }
+
+}
+

@@ -3,16 +3,6 @@
 /**
  * The public-facing functionality of the plugin.
  *
- * @link       https://dig.id
- * @since      1.0.0
- *
- * @package    Cf7_Mf
- * @subpackage Cf7_Mf/public
- */
-
-/**
- * The public-facing functionality of the plugin.
- *
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the public-facing stylesheet and JavaScript.
  *
@@ -53,13 +43,13 @@ class Cf7_Mf_Public {
 		$this->version     = $version;
 
 		// Debug system configuration
-		error_log('CF7-MF: Plugin Initialization');
-		error_log('Upload Max Filesize: ' . ini_get('upload_max_filesize'));
-		error_log('Post Max Size: ' . ini_get('post_max_size'));
-		error_log('Memory Limit: ' . ini_get('memory_limit'));
+		//error_log('CF7-MF: Plugin Initialization');
+		//error_log('Upload Max Filesize: ' . ini_get('upload_max_filesize'));
+		//error_log('Post Max Size: ' . ini_get('post_max_size'));
+		//error_log('Memory Limit: ' . ini_get('memory_limit'));
 		
 		// Check upload directory
-		$this->check_upload_dir();
+		//$this->check_upload_dir();
 
 		// 1. Form Setup
 		add_action('wpcf7_init', array($this, 'cf7_mf_add_form_tag_file'), 10, 0);
@@ -79,6 +69,53 @@ class Cf7_Mf_Public {
 		add_action('wpcf7_mail_sent', array($this, 'cf7_mf_cleanup_temp_files'));
 
 	}
+
+	/**
+	 * Register the stylesheets for the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_styles() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Cf7_Mf_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Cf7_Mf_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/cf7-mf-public.css', array(), $this->version, 'all' );
+
+	}
+
+	/**
+	 * Register the JavaScript for the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_scripts() {
+
+		/**
+		 * This function is provided for demonstration purposes only.
+		 *
+		 * An instance of this class should be passed to the run() function
+		 * defined in Cf7_Mf_Loader as all of the hooks are defined
+		 * in that particular class.
+		 *
+		 * The Cf7_Mf_Loader will then create the relationship
+		 * between the defined hooks and the functions defined in this
+		 * class.
+		 */
+
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cf7-mf-public.js', array( 'jquery' ), $this->version, false );
+
+	}
+
 
 	/**
 	 * Check upload directory permissions
@@ -206,51 +243,6 @@ class Cf7_Mf_Public {
 		}
 	}
 
-	/**
-	 * Register the stylesheets for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
-
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Cf7_Mf_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Cf7_Mf_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/cf7-mf-public.css', array(), $this->version, 'all' );
-
-	}
-
-	/**
-	 * Register the JavaScript for the public-facing side of the site.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_scripts() {
-
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Cf7_Mf_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Cf7_Mf_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cf7-mf-public.js', array( 'jquery' ), $this->version, false );
-
-	}
 
 	/**
 	 * Undocumented function
@@ -359,12 +351,12 @@ class Cf7_Mf_Public {
 		);
 
 		$html .= '<div class=".cf7-mf-feedback-message"></div>
-		<div class="cf7-mf-progress-bar-wrapper" style="display: none;">
-                <div class="cf7-mf-progress-bar">
-                    <div class="cf7-mf-progress-bar-fill"></div>
-                </div>
-                <div class="cf7-mf-progress-text">0%</div>
-            </div>';
+							<div class="cf7-mf-progress-bar-wrapper" style="display: none;">
+								<div class="cf7-mf-progress-bar">
+										<div class="cf7-mf-progress-bar-fill"></div>
+								</div>
+								<div class="cf7-mf-progress-text">0%</div>
+							</div>';
 
 		$html .= '</div>';
 
