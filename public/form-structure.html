@@ -1,0 +1,125 @@
+<div class="wpcf7--custom-grid">
+
+    <div class="col-span-2 md:col-span-6">
+        <h2>Persönliche Informationen</h2>
+        <span class="title-separator"></span>
+    </div>
+    <div class="wpcf7--custom-grid-row">
+        <span class="col-span-1 md:col-span-2 block relative">
+            [text* your-vorname id:your-vorname autocomplete:name]
+            <label for="your-vorname">Vorname</label>
+        </span>
+        <span class="col-span-1 md:col-span-2 block relative">
+            [text* your-nachname id:your-nachname autocomplete:surname]
+            <label for="your-nachname">Nachname</label>
+        </span>
+    </div>
+    <div class="wpcf7--custom-grid-row">
+        <span class="block relative">
+            [email* your-email id:your-email autocomplete:email]
+            <label for="your-email">E-Mail</label>
+        </span>
+        <span class="block relative">
+            [tel* your-telefon id:your-telefon autocomplete:phone]
+            <label for="your-telefon">Telefon</label>
+        </span>
+    </div>
+    <div class="col-span-2 md:col-span-2"></div>
+</div><!-- block 01 end -->
+
+<div class="wpcf7--custom-grid">
+    <div class="col-span-2 md:col-span-6">
+        <h2>Fahrzeug Details</h2>
+        <span class="title-separator"></span>
+    </div>
+    <div class="col-span-2 md:col-span-2">
+        <span class="block relative">
+            [text* your-mark-model id:your-mark-model]
+            <label for="your-mark-model">Marke & Modell</label>
+        </span>
+        <span class="block relative">
+            [text* your-typenschein id:your-typenschein]
+            <label for="your-typenschein">Typenschein</label>
+        </span>
+        <span class="block relative">
+            [text* your-antrieb id:your-antrieb]
+            <label for="your-antrieb">Antrieb</label>
+        </span>
+        <span class="block relative">
+            [text* your-zustand id:your-zustand]
+            <label for="your-zustand">Zustand</label>
+        </span>
+    </div>
+    <div class="col-span-2 md:col-span-2">
+        <span class="block relative">
+            [text* your-inv id:your-inv placeholder "DD.MM.YYYY"]
+            <label for="your-inv">1. Inv.</label>
+        </span>
+        <span class="block relative">
+            [text* your-kraftstoff id:your-kraftstoff]
+            <label for="your-kraftstoff">Kraftstoff</label>
+        </span>
+        <span class="block relative">
+            [text* your-preisvorstellung id:your-preisvorstellung]
+            <label for="your-preisvorstellung">Preisvorstellung</label>
+        </span>
+        <span class="block relative">
+            [text* your-vin-chassisnummer id:your-vin-chassisnummer]
+            <label for="your-vin-chassisnummer">VIN / Chassisnummer</label>
+        </span>
+    </div>
+    <div class="col-span-2 md:col-span-2">
+        <span class="block relative">
+            [text* your-getriebe id:your-getriebe]
+            <label for="your-getriebe">Getriebe</label>
+        </span>
+        <span class="block relative">
+            [text* your-laufleistung id:your-laufleistung]
+            <label for="your-laufleistung">Laufleistung</label>
+        </span>
+        <span class="block relative">
+            [text* your-letzter-service id:your-letzter-service placeholder "DD.MM.YYYY"]
+            <label for="your-letzter-service">Letzter Service</label>
+        </span>
+        <span class="block relative">
+            [text* your-mangel-schaden id:your-mangel-schaden]
+            <label for="your-mangel-schaden">Mängel / Schäden</label>
+        </span>
+    </div>
+</div><!-- block 02 end -->
+
+<div class="wpcf7--custom-grid">
+    <div class="col-span-2 md:col-span-6">
+        <h2>Media</h2>
+        <span class="title-separator"></span>
+    </div>
+    <div class="col-span-2 md:col-span-6">
+        <label for="your-image-file" class="title-pre" style="position:relative;top:0;">Fotos Auto Aussen</label>
+        [multifile* your-image-file filetypes:image/* min:2 max:10 limit:10]
+        <p class="text-body mt-5">Min. 2 Bilder, Max. 10 Bilder. Geeignete Dateiformate: jpg & .png.</p>
+        <span class="form-separator"></span>
+    </div>
+    <div class="col-span-2 md:col-span-6">
+        <label for="file-auto-innen" class="title-pre" style="position:relative;top:0;">Fotos Auto Innen</label>
+        [multifile* file-auto-innen filetypes:image/* min:2 max:10 limit:10]
+        <p class="text-body mt-5">Min. 2 Bilder, Max. 10 Bilder. Geeignete Dateiformate: jpg & .png.</p>
+        <span class="form-separator"></span>
+    </div>
+    <div class="col-span-2 md:col-span-6">
+        <label for="file-fahrzeugausweis" class="title-pre" style="position:relative;top:0;">Fahrzeugausweis</label>
+        [multifile* file-fahrzeugausweis filetypes:image/* min:1 max:3 limit:5]
+        <p class="text-body mt-5">Max. 3 Dateien. Geeignete Dateiformate: jpq und png.</p>
+        <span class="form-separator"></span>
+    </div>
+    <div class="col-span-2 md:col-span-6">
+        <span class="block relative">
+            [textarea your-kommentare id:your-kommentare 2x4]
+            <label for="your-kommentare">Kommentare</label>
+        </span>
+    </div>
+    <div class="col-span-2 md:col-span-6">
+        <div class="wpcf7--custom-grid-form-footer">
+            <p style="font-family: dm-sans;font-size: 20px;font-style: normal;font-weight: 700;line-height: 55px;color: #005AA9;">Hiermit bestätigen Sie, dass alle Angaben korrekt sind.</p>[submit "Senden"]
+        </div>
+    </div><!-- block 03 end -->
+</div>
