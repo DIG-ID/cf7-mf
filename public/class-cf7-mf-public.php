@@ -394,32 +394,33 @@ class Cf7_Mf_Public {
 		return array_merge(
 			$messages,
 			array(
-				'upload_failed' => array(
-					'description' => __( 'Uploading a file fails for any reason', 'cf7-mf' ),
-					'default'     => __( 'There was an error uploading the file to the server.', 'cf7-mf' ),
-				),
-				'upload_file_type_invalid' => array(
-					'description' => __( 'Uploaded file is not allowed for file type', 'cf7-mf' ),
-					'default'     => __( 'You are not allowed to upload files of this type.', 'cf7-mf' ),
-				),
-				'upload_file_too_large' => array(
-					'description' => __( 'Uploaded file is too large', 'cf7-mf' ),
-					'default'     => __( 'Uploaded file is too big.', 'cf7-mf' ),
-				),
-				'upload_failed_php_error' => array(
-					'description' => __( 'Uploading a file fails for PHP error', 'cf7-mf' ),
-					'default'     => __( 'There was an error uploading the file.', 'cf7-mf' ),
-				),
-				'cf7_mb_min_file' => array(
-					'description' => __( 'You need to upload atleast __min_file_limit__ files.', 'cf7-mf' ),
-					'default'     => __( 'You need to upload atleast __min_file_limit__ files.', 'cf7-mf' ),
-				),
-				'cf7_mb_max_file' => array(
-					'description' => __( 'You can not upload more than __max_file_limit__ files per request', 'cf7-mf' ),
-					'default'     => __( 'You can not upload more than __max_file_limit__ files per request.', 'cf7-mf' ),
-				),
+					'upload_failed' => array(
+						'description' => __( 'Das Hochladen einer Datei schlägt aus irgendeinem Grund fehl.', 'cf7-mf' ),
+						'default'     => __( 'Beim Hochladen der Datei auf den Server ist ein Fehler aufgetreten.', 'cf7-mf' ),
+					),
+					'upload_file_type_invalid' => array(
+						'description' => __( 'Der hochgeladene Dateityp ist nicht erlaubt.', 'cf7-mf' ),
+						'default'     => __( 'Sie dürfen Dateien dieses Typs nicht hochladen.', 'cf7-mf' ),
+					),
+					'upload_file_too_large' => array(
+						'description' => __( 'Die hochgeladene Datei ist zu gross.', 'cf7-mf' ),
+						'default'     => __( 'Die hochgeladene Datei ist zu gross.', 'cf7-mf' ),
+					),
+					'upload_failed_php_error' => array(
+						'description' => __( 'Das Hochladen einer Datei schlägt aufgrund eines PHP-Fehlers fehl.', 'cf7-mf' ),
+						'default'     => __( 'Beim Hochladen der Datei ist ein Fehler aufgetreten.', 'cf7-mf' ),
+					),
+					'cf7_mb_min_file' => array(
+						'description' => __( 'Sie müssen mindestens __min_file_limit__ Dateien hochladen.', 'cf7-mf' ),
+						'default'     => __( 'Sie müssen mindestens __min_file_limit__ Dateien hochladen.', 'cf7-mf' ),
+					),
+					'cf7_mb_max_file' => array(
+						'description' => __( 'Sie können nicht mehr als __max_file_limit__ Dateien pro Anfrage hochladen.', 'cf7-mf' ),
+						'default'     => __( 'Sie können nicht mehr als __max_file_limit__ Dateien pro Anfrage hochladen.', 'cf7-mf' ),
+					),
 			)
 		);
+
 	}
 
 	/**

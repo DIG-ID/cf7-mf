@@ -9,7 +9,7 @@
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
                 reader.onerror = (error) => {
-                    console.error('FileReader error:', error);
+                    //console.error('FileReader error:', error);
                     reject(error);
                 };
                 reader.readAsDataURL(file);
@@ -48,10 +48,10 @@
                             }
                         }
 
-                        console.log('New dimensions:', {
+                        /*console.log('New dimensions:', {
                             width: Math.round(newWidth),
                             height: Math.round(newHeight)
-                        });
+                        });*/
 
                         canvas.width = newWidth;
                         canvas.height = newHeight;
@@ -64,7 +64,7 @@
                                 //console.log('Blob size:', Math.round(blobSize) + 'KB');
                                 
                                 if (blobSize > maxSizeKB) {
-                                    console.log('Compressing image further');
+                                    //console.log('Compressing image further');
                                     canvas.toBlob(
                                         resolve,
                                         file.type,

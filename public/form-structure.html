@@ -4,27 +4,31 @@
         <h2>Persönliche Informationen</h2>
         <span class="title-separator"></span>
     </div>
+
     <div class="wpcf7--custom-grid-row">
-        <span class="col-span-1 md:col-span-2 block relative">
+        <span class="col-span-1 block relative">
             [text* your-vorname id:your-vorname autocomplete:name]
             <label for="your-vorname">Vorname</label>
         </span>
-        <span class="col-span-1 md:col-span-2 block relative">
+        <span class="col-span-1 block relative">
             [text* your-nachname id:your-nachname autocomplete:surname]
             <label for="your-nachname">Nachname</label>
         </span>
+        <div class="col-span-1"></div>
     </div>
+    
     <div class="wpcf7--custom-grid-row">
-        <span class="block relative">
+        <span class="col-span-1 block relative">
             [email* your-email id:your-email autocomplete:email]
             <label for="your-email">E-Mail</label>
         </span>
-        <span class="block relative">
+        <span class="col-span-1 block relative">
             [tel* your-telefon id:your-telefon autocomplete:phone]
             <label for="your-telefon">Telefon</label>
         </span>
+        <div class="col-span-1"></div>
     </div>
-    <div class="col-span-2 md:col-span-2"></div>
+    
 </div><!-- block 01 end -->
 
 <div class="wpcf7--custom-grid">
@@ -108,7 +112,7 @@
     <div class="col-span-2 md:col-span-6">
         <label for="file-fahrzeugausweis" class="title-pre" style="position:relative;top:0;">Fahrzeugausweis</label>
         [multifile* file-fahrzeugausweis filetypes:image/* min:1 max:3 limit:5]
-        <p class="text-body mt-5">Max. 3 Dateien. Geeignete Dateiformate: jpq und png.</p>
+        <p class="text-body mt-5">Max. 3 Dateien. Geeignete Dateiformate: jpg & .png.</p>
         <span class="form-separator"></span>
     </div>
     <div class="col-span-2 md:col-span-6">
