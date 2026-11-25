@@ -16,7 +16,7 @@
  * Plugin Name:       CF7 Multifile
  * Plugin URI:        https://#
  * Description:       Extend the Contact Form 7 to be able to handle Multifile input field.
- * Version:           1.0.0
+ * Version:           1.1.1
  * Author:            dig.id
  * Author URI:        https://dig.id/
  * License:           GPL-2.0+
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'CF7_MF_VERSION', '1.0.0' );
+define( 'CF7_MF_VERSION', '1.1.1' );
 
 /**
  * The code that runs during plugin activation.
